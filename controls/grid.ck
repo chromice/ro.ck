@@ -19,6 +19,10 @@ public class OscGrid extends OscControl
 	int width;
 	int height;
 	
+	// TODO: Implement toggle & feedback
+	int feedback;
+	int toggle;
+	
 	int _state[0][0];
 	
 	fun void init()

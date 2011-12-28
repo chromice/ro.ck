@@ -18,7 +18,7 @@ public class OscControl
 {
 	fun void init()
 	{
-		return;
+		
 	}
 	
 	/* ================== */
