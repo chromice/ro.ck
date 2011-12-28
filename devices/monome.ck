@@ -98,6 +98,20 @@ class MonomeGrid extends OscGrid
 	}
 }
 
+class MonomeTilt extends OscXY
+/*
+	TODO: show/hide support
+*/
+{
+	fun void _updateValues()
+	{
+		event.getInt(); // n
+		event.getInt() => x;
+		event.getInt() => y;
+		event.getInt(); // z
+	}
+}
+
 public class Monome
 /*
 	TODO: Handling multiple monomes & using a different incoming port.
@@ -259,5 +273,16 @@ public class Monome
 		grid.init();
 		
 		return grid;
+	}
+	
+	fun OscXY tilt()
+	{
+		MonomeTilt tilt;
+		
+		tiltEvent() @=> tilt.event;
+		
+		tilt.init();
+		
+		return tilt;
 	}
 }

@@ -12,16 +12,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 
-/*
-	Import controls
-*/
-Machine.add("controls/control.ck");
-Machine.add("controls/grid.ck");
-Machine.add("controls/xy.ck");
-
-/*
-	Import devices
-*/
-Machine.add("devices/monome.ck");
+public class OscXY extends OscControl
+{
+	float x;
+	float y;
+	
+	fun void _updateValues()
+	{
+		event.getFloat() => x;
+		event.getFloat() => y;
+	}
+}
