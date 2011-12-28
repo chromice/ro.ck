@@ -19,14 +19,10 @@ public class Monome
 	OscSend _to;
 	OscRecv _from;
 	
-	OscEvent _keyEvent;
-	OscEvent _tiltEvent;
-	
 	"localhost" => string host;
 	18000 => int port;
 	
 	string prefix;
-	0 => int tilt;
 	0 => int rotation; // Cable position: 0 - left; 90 - top; 180 - right; 270 - bottom.
 	8 => int intensity;
 	
@@ -57,18 +53,8 @@ public class Monome
 			rotation => _to.addInt;
 		_to.startMsg("/"+ prefix + "/grid/led/intensity", "i");
 			intensity => _to.addInt;
-		_to.startMsg("/"+ prefix + "/tilt/set", "ii");
-			0 => _to.addInt;
-			tilt => _to.addInt;
 		
 		clear();
-		
-		_from.event("/"+ prefix + "/grid/key, iii") @=> OscEvent gridKeyEvent;
-		
-		if (tilt)
-		{
-			_from.event("/"+ prefix + "/tilt, iiii") @=> OscEvent gridTiltEvent;
-		}
 	}
 	
 	fun void set(int x, int y, int state)
@@ -118,9 +104,24 @@ public class Monome
 			mask => _to.addInt;
 	}
 	
+	fun OscEvent keyEvent()
+	{
+		return _from.event("/"+ prefix + "/grid/key, iii");
+	}
+	
+	fun	OscEvent tiltEvent()
+	{
+		// Turn the tilt sensor ON.
+		_to.startMsg("/"+ prefix + "/tilt/set", "ii");
+			0 => _to.addInt;
+			1 => _to.addInt;
+		
+		return _from.event("/"+ prefix + "/tilt, iiii");
+	}
+	
 	fun void clear()
 	/*
-		Display "RO" logo to confirm connection
+		Display "RO" symbol to confirm connection
 	*/
 	{
 		16 => int frames;
@@ -139,7 +140,7 @@ public class Monome
 
 			all(0);
 
-			100::ms * (1 - frame / frames $ float) => now;
+			100::ms * (1 - frame / frames $float) => now;
 		}
 	}
 }
