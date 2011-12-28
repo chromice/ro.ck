@@ -24,7 +24,7 @@ public class Monome
 	
 	string prefix;
 	0 => int rotation; // Cable position: 0 - left; 90 - top; 180 - right; 270 - bottom.
-	8 => int intensity;
+	8 => int intensity; // [0,15]
 	
 	fun void connect()
 	{
@@ -56,7 +56,10 @@ public class Monome
 		
 		clear();
 	}
-	
+
+/*
+	Outgoing OSC events
+*/
 	fun void set(int x, int y, int state)
 	{
 		_to.startMsg("/"+ prefix + "/grid/led/set", "iii");
@@ -104,6 +107,9 @@ public class Monome
 			mask => _to.addInt;
 	}
 	
+/*
+	Incoming OSC events
+*/
 	fun OscEvent keyEvent()
 	{
 		return _from.event("/"+ prefix + "/grid/key, iii");
@@ -117,6 +123,26 @@ public class Monome
 			1 => _to.addInt;
 		
 		return _from.event("/"+ prefix + "/tilt, iiii");
+	}
+
+/*
+	Controls
+*/
+	fun OscGrid grid(int x, int y, int w, int h)
+	{
+		MonomeGrid grid;
+		
+		x => grid.offset_x;
+		y => grid.offset_y;
+		w => grid.width;
+		h => grid.height;
+		
+		this @=> grid.monome;
+		keyEvent() @=> grid.event;
+		
+		grid.init();
+		
+		return grid;
 	}
 	
 	fun void clear()
@@ -141,6 +167,87 @@ public class Monome
 			all(0);
 
 			100::ms * (1 - frame / frames $float) => now;
+		}
+	}
+}
+
+class MonomeGrid extends OscGrid
+{
+	// Offsets
+	int offset_x;
+	int offset_y;
+	
+	// Connection to monome
+	Monome @ monome;
+	
+	fun int changed()
+	{
+		while (event.nextMsg() != 0)
+		{
+			event.getInt() - offset_x => int _x;
+			event.getInt() - offset_y => int _y;
+			event.getInt() => int _state;
+			
+			if (hidden || _x < 0 || _x >= width || _y < 0 || _y >= height)
+			{
+				continue;
+			}
+			
+			_x => x;
+			_y => y;
+			_state => state;
+			
+			return 1;
+		}
+		
+		return 0;
+	}
+	
+	fun void set(int x, int y, int state)
+	{
+		state => _state[x][y];
+		
+		if (!hidden && x < width && y < height)
+		{
+			monome.set(offset_x + x, offset_y + y, state);
+		}
+	}
+	
+	fun	void show()
+	{
+		if (!hidden) return;
+		
+		0 => hidden;
+		
+		// Set all LEDs
+		_update();
+	}
+	
+	fun void hide()
+	{
+		if (hidden) return;
+		
+		1 => hidden;
+		
+		// Clear all LEDs
+		_update();
+	}
+	
+	fun void _update()
+	{
+		for (0 => int _x; _x < _state.cap(); _x++)
+		{
+			for (0 => int _y; _y < _state[_x].cap(); _y++)
+			{
+				if (hidden)
+				{
+					monome.set(offset_x + _x, offset_y + _y, 0);
+				}
+				else
+				{
+					monome.set(offset_x + _x, offset_y + _y, _state[_x][_y]);
+				}
+			}
 		}
 	}
 }
