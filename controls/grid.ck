@@ -15,18 +15,22 @@
 //
 
 public class OscGrid extends OscControl
+/*
+	Abstract grid control.
+
+	TODO: Implement toggle & feedback.
+*/
 {
 	int width;
 	int height;
 	
-	// TODO: Implement toggle & feedback
-	int feedback;
-	int toggle;
-	
 	int _state[0][0];
 	
-	fun void init()
+	fun void init(int w, int h)
 	{
+		w => width;
+		h => height;
+		
 		// Initialize state array
 		for (0 => int _x; _x < width; _x++)
 		{

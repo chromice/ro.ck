@@ -15,6 +15,9 @@
 //
 
 public class OscXY extends OscControl
+/*
+	Abstract XY control.
+*/
 {
 	float x;
 	float y;

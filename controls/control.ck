@@ -15,10 +15,13 @@
 //
 
 public class OscControl
+/*
+	Abstract OSC control.
+*/
 {
 	fun void init()
 	{
-		
+		<<< "OscControl::init() is not implemented!" >>>;
 	}
 	
 	/* ================== */
@@ -27,7 +30,7 @@ public class OscControl
 	
 	OscEvent @ event;
 	
-	fun int changed()
+	fun int updated()
 	{
 		if (event.nextMsg() == 0)
 		{
@@ -41,7 +44,7 @@ public class OscControl
 	
 	fun void _updateValues()
 	{
-		
+		<<< "OscControl::_updateValues() is not implemented!" >>>;
 	}
 		
 	/* ================================= */

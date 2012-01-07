@@ -3,16 +3,17 @@
 
 Monome monome;
 
-18974 => monome.port;
-0 => monome.rotation;
-8 => monome.intensity;
+monome.init("localhost", 18974, "left");
 
-monome.connect();
+/* Create three virtual grids */
 monome.grid(0,0,2,1) @=> OscGrid grid;
 monome.grid(0,1,8,7) @=> OscGrid grid_1;
 monome.grid(0,1,8,7) @=> OscGrid grid_2;
+
+/* Create an XY control for the tilt sensor*/
 monome.tilt() @=> OscXY tilt;
 
+/* Spork event hanlders */
 spork ~ gridControl("Grid 1", grid_1);
 spork ~ gridControl("Grid 2", grid_2);
 spork ~ tiltControl(tilt);
@@ -23,7 +24,7 @@ fun void gridControl(string name, OscGrid grid)
 	{
 		grid.event => now;
 	
-		while (grid.changed())
+		while (grid.updated())
 		{
 			<<< name + ": [" + grid.x + "," + grid.y + "]: " + grid.state >>>;
 		
@@ -38,7 +39,7 @@ fun void tiltControl(OscXY tilt)
 	{
 		tilt.event => now;
 	
-		while (tilt.changed())
+		while (tilt.updated())
 		{
 			<<< "Tilt: [" + tilt.x + "," + tilt.y + "]" >>>;
 		}
@@ -52,7 +53,7 @@ while (true)
 {
 	grid.event => now;
 	
-	while (grid.changed())
+	while (grid.updated())
 	{
 		<<< "Switch [" + grid.x + "," + grid.y + "]: " + grid.state >>>;
 		
