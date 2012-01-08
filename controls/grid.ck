@@ -16,20 +16,34 @@
 
 public class OscGrid extends OscControl
 /*
-	Abstract grid control.
-
-	TODO: Implement toggle & feedback.
+	Abstract grid control. It has three modes of operation: push, toggle and radio. Plus optional feedback.
 */
 {
 	int width;
 	int height;
 	
 	int _state[0][0];
+	int _feedback;
+	string _mode;
 	
-	fun void init(int w, int h)
+	/* ================== */
+	/* = Initialization = */
+	/* ================== */
+	
+	fun void init(int w, int h, string mode, int feedback)
 	{
 		w => width;
 		h => height;
+		feedback => _feedback;
+		
+		if (mode == "radio" || mode == "toggle")
+		{
+			mode => _mode;
+		}
+		else
+		{
+			"push" => _mode;
+		}
 		
 		// Initialize state array
 		for (0 => int _x; _x < width; _x++)
@@ -45,20 +59,87 @@ public class OscGrid extends OscControl
 		}
 	}
 	
+	/* ================= */
+	/* = State control = */
+	/* ================= */
+	
+	fun int get(int x, int y)
+	{
+		return _state[x][y];
+	}
+	
 	fun void set(int x, int y, int state)
 	{
-		state => _state[x][y];
+		if (_mode == "push")
+		{
+			state => _state[x][y];
+		}
+		else if (_mode == "toggle" && state > 0)
+		{
+			if (_state[x][y] > 0)
+			{
+				0 => _state[x][y];
+			}
+			else
+			{
+				1 => _state[x][y];
+			}
+		}
+		else if (_mode == "radio" && state > 0)
+		{
+			for (0 => int _x; _x < width; _x++)
+			{
+				for (0 => int _y; _y < height; _y++)
+				{
+					0 => _state[_x][_y];
+				}
+			}
+			
+			1 => _state[x][y];
+		}
+		
+		_draw(x,y);
 	}
+	
+	fun void _draw(int x, int y)
+	{
+		// Implementation specific drawing routine
+	}
+	
+	/* ================== */
+	/* = Event handling = */
+	/* ================== */
 	
 	int x;
 	int y;
 	int state;
 	
-	fun void _updateValues()
+	fun int _updateValues()
 	{
 		event.getInt() => x;
 		event.getInt() => y;
 		event.getInt() => state;
+		
+		set(x, y, state);
+		
+		return _updateModeValues();
+	}
+	
+	fun int _updateModeValues()
+	{
+		if (_mode == "push" || state > 0)
+		{
+			if (_mode != "push")
+			{
+				_state[x][y] => state;
+			}
+			
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 }

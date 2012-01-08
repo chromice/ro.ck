@@ -19,12 +19,17 @@ public class OscXY extends OscControl
 	Abstract XY control.
 */
 {
+	Interpolator interpolatorX;
+	Interpolator interpolatorY;
+	
 	float x;
 	float y;
 	
-	fun void _updateValues()
+	fun int _updateValues()
 	{
-		event.getFloat() => x;
-		event.getFloat() => y;
+		interpolatorX.interpolate(event.getFloat()) => x;
+		interpolatorY.interpolate(event.getFloat()) => y;
+		
+		return true;
 	}
 }

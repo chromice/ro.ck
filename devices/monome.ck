@@ -16,9 +16,9 @@
 
 class MonomeGrid extends OscGrid
 /*
-	A virtual grid abstraction on top of real monome grid.
+	A virtual grid on top of the real monome grid.
 	
-	Multiple grids may overlap. It is up to the user to resolve such conflicts.
+	Multiple grids may overlap. It is up to the user to resolve/avoid such conflicts.
 */
 {
 	// Offsets
@@ -28,63 +28,61 @@ class MonomeGrid extends OscGrid
 	// Connection to monome
 	Monome @ _monome;
 	
-	fun int updated()
+	/* ================== */
+	/* = Event handling = */
+	/* ================== */
+	
+	fun int _updateValues()
 	{
-		while (event.nextMsg() != 0)
+		event.getInt() - _offset_x => int _x;
+		event.getInt() - _offset_y => int _y;
+		event.getInt() => int _s;
+		
+		if (_x < 0 || _x >= width || _y < 0 || _y >= height)
 		{
-			event.getInt() - _offset_x => int _x;
-			event.getInt() - _offset_y => int _y;
-			event.getInt() => int _state;
-			
-			if (hidden || _x < 0 || _x >= width || _y < 0 || _y >= height)
-			{
-				continue;
-			}
-			
-			_x => x;
-			_y => y;
-			_state => state;
-			
-			return 1;
+			return false;
 		}
 		
-		return 0;
-	}
-	
-	fun void set(int x, int y, int state)
-	{
-		state => _state[x][y];
-		
-		if (!hidden && x < width && y < height)
+		if (hidden && (_mode != "push" || _state[_x][_y] == 0 || _s > 0))
 		{
-			_monome.set(_offset_x + x, _offset_y + y, state);
+			return false;
 		}
+		
+		_x => x;
+		_y => y;
+		_s => state;
+		
+		set(x, y, state);
+		
+		return _updateModeValues();
 	}
 	
-	fun	void show()
+	/* =========== */
+	/* = Drawing = */
+	/* =========== */
+	
+	fun void _draw(int x, int y)
 	{
-		if (!hidden) return;
+		if (hidden || !_feedback)
+		{
+			return;
+		}
 		
-		0 => hidden;
+		if (_mode == "radio")
+		{
+			_redraw();
+		}
 		
-		// Set all LEDs
-		_update();
+		_monome.set(_offset_x + x, _offset_y + y, _state[x][y]);
 	}
 	
-	fun void hide()
+	fun void _redraw()
 	{
-		// FIXME: A button may remain pressed! What should we do?
+		if (!_feedback)
+		{
+			return;
+		}
 		
-		if (hidden) return;
-		
-		1 => hidden;
-		
-		// Clear all LEDs
-		_update();
-	}
-	
-	fun void _update()
-	{
 		for (0 => int _x; _x < _state.cap(); _x++)
 		{
 			for (0 => int _y; _y < _state[_x].cap(); _y++)
@@ -100,19 +98,57 @@ class MonomeGrid extends OscGrid
 			}
 		}
 	}
+	
+	/* ============== */
+	/* = Visibility = */
+	/* ============== */
+	
+	fun	void show()
+	{
+		if (!hidden) return;
+		
+		0 => hidden;
+		
+		// Set all LEDs
+		_redraw();
+	}
+	
+	fun void hide()
+	{
+		if (hidden) return;
+		
+		1 => hidden;
+		
+		// Clear all LEDs
+		_redraw();
+	}
 }
 
 class MonomeTilt extends OscXY
-/*
-	TODO: show/hide support
-*/
 {
-	fun void _updateValues()
+	90.0 => interpolatorX.minInput;
+	90.0 => interpolatorY.minInput;
+	166.0 => interpolatorX.maxInput;
+	166.0 => interpolatorY.maxInput;
+	
+	-1.0 => interpolatorX.minOutput;
+	-1.0 => interpolatorY.minOutput;
+	1.0 => interpolatorX.maxOutput;
+	1.0 => interpolatorY.maxOutput;
+	
+	fun int _updateValues()
 	{
+		if (hidden)
+		{
+			return false;
+		}
+		
 		event.getInt(); // n
-		event.getInt() => x;
-		event.getInt() => y;
+		interpolatorX.interpolate(event.getInt()) => x;
+		interpolatorY.interpolate(event.getInt()) => y;
 		event.getInt(); // z
+		
+		return true;
 	}
 }
 
@@ -153,17 +189,17 @@ public class Monome
 		_to.startMsg("/sys/port", "i");
 			_incomingPortOffset => _to.addInt;
 		
-		_incomingPortOffset++;
-		
 		// Set prefix
 		if (prefix == "")
 		{
-			"monome_" + Std.rand() => _prefix;
+			"monome_" + _incomingPortOffset => _prefix;
 		}
 		else
 		{
 			prefix => _prefix;
 		}
+		
+		_incomingPortOffset++;
 		
 		_to.startMsg("/sys/prefix", "s");
 			_prefix => _to.addString;
@@ -304,6 +340,26 @@ public class Monome
 	
 	fun OscGrid grid(int x, int y, int w, int h)
 	{
+		return _grid(x, y, w, h, "push", false);
+	}
+
+	fun OscGrid gridPush(int x, int y, int w, int h)
+	{
+		return _grid(x, y, w, h, "push", true);
+	}
+
+	fun OscGrid gridToggle(int x, int y, int w, int h)
+	{
+		return _grid(x, y, w, h, "toggle", true);
+	}
+	
+	fun OscGrid gridRadio(int x, int y, int w, int h)
+	{
+		return _grid(x, y, w, h, "radio", true);
+	}
+	
+	fun OscGrid _grid(int x, int y, int w, int h, string mode, int feedback)
+	{
 		MonomeGrid grid;
 		
 		x => grid._offset_x;
@@ -312,7 +368,7 @@ public class Monome
 		
 		keyEvent() @=> grid.event;
 		
-		grid.init(w, h);
+		grid.init(w, h, mode, feedback);
 		
 		return grid;
 	}
@@ -322,8 +378,6 @@ public class Monome
 		MonomeTilt tilt;
 		
 		tiltEvent() @=> tilt.event;
-		
-		tilt.init();
 		
 		return tilt;
 	}

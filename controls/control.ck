@@ -19,11 +19,6 @@ public class OscControl
 	Abstract OSC control.
 */
 {
-	fun void init()
-	{
-		<<< "OscControl::init() is not implemented!" >>>;
-	}
-	
 	/* ================== */
 	/* = Event handling = */
 	/* ================== */
@@ -32,24 +27,25 @@ public class OscControl
 	
 	fun int updated()
 	{
-		if (event.nextMsg() == 0)
+		while (event.nextMsg() != 0)
 		{
-			return 0;
+			if (_updateValues())
+			{
+				return true;
+			}
 		}
 		
-		_updateValues();
-		
-		return 1;
+		return false;
 	}
 	
-	fun void _updateValues()
+	fun int _updateValues()
 	{
-		<<< "OscControl::_updateValues() is not implemented!" >>>;
+		return true;
 	}
 		
-	/* ================================= */
-	/* = Basic show/hide functionality = */
-	/* ================================= */
+	/* ============== */
+	/* = Visibility = */
+	/* ============== */
 	
 	0 => int hidden;
 	

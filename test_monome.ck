@@ -1,21 +1,20 @@
-// Load classes
-/*Machine.add("monome.ck");*/
-
 Monome monome;
 
-monome.init("localhost", 18974, "left");
+monome.init("localhost", 18974, "top");
 
-/* Create three virtual grids */
-monome.grid(0,0,2,1) @=> OscGrid grid;
-monome.grid(0,1,8,7) @=> OscGrid grid_1;
-monome.grid(0,1,8,7) @=> OscGrid grid_2;
+/* Create four virtual grids */
+monome.gridRadio(0,0,2,1) @=> OscGrid grid;
+monome.gridToggle(0,1,8,7) @=> OscGrid grid_1;
+monome.gridPush(0,1,8,7) @=> OscGrid grid_2;
+monome.grid(2,0,6,1) @=> OscGrid grid_3;
 
-/* Create an XY control for the tilt sensor*/
+/* Create an XY control for the tilt sensor */
 monome.tilt() @=> OscXY tilt;
 
 /* Spork event hanlders */
 spork ~ gridControl("Grid 1", grid_1);
 spork ~ gridControl("Grid 2", grid_2);
+spork ~ gridControl("Grid 3", grid_3);
 spork ~ tiltControl(tilt);
 
 fun void gridControl(string name, OscGrid grid)
@@ -27,8 +26,6 @@ fun void gridControl(string name, OscGrid grid)
 		while (grid.updated())
 		{
 			<<< name + ": [" + grid.x + "," + grid.y + "]: " + grid.state >>>;
-		
-			grid.set(grid.x, grid.y, grid.state);
 		}
 	}
 }
@@ -46,8 +43,10 @@ fun void tiltControl(OscXY tilt)
 	}
 }
 
-// Hide the second grid
+// Hide the second grid and tilt sensor
+tilt.hide();
 grid_2.hide();
+grid.set(0,0,1);
 
 while (true)
 {
@@ -55,22 +54,19 @@ while (true)
 	
 	while (grid.updated())
 	{
-		<<< "Switch [" + grid.x + "," + grid.y + "]: " + grid.state >>>;
+		<<< "Grid #" + (grid.x + 1) + " ON!" >>>;
 		
-		if (grid.state)
+		if (grid.x == 0)
 		{
-			if (grid.x == 0)
-			{
-				grid_2.hide();
-				grid_1.show();
-			}
-			else
-			{
-				grid_1.hide();
-				grid_2.show();
-			}
+			tilt.hide();
+			grid_2.hide();
+			grid_1.show();
 		}
-		
-		grid.set(grid.x, grid.y, grid.state);
+		else
+		{
+			grid_1.hide();
+			grid_2.show();
+			tilt.show();
+		}
 	}
 }

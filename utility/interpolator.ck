@@ -12,21 +12,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 
+public class Interpolator
 /*
-	Import utilities
+	Basic linear interpolator.
 */
-Machine.add("utility/interpolator.ck");
-
-/*
-	Import abstract controls
-*/
-Machine.add("controls/control.ck");
-Machine.add("controls/grid.ck");
-Machine.add("controls/xy.ck");
-
-/*
-	Import devices and control implementations
-*/
-Machine.add("devices/monome.ck");
+{
+	0.0 => float minInput;
+	0.0 => float minOutput;
+	1.0 => float maxInput;
+	1.0 => float maxOutput;
+	
+	fun float interpolate(float input)
+	{
+		Math.max(input, minInput) => input;
+		Math.min(input, maxInput) => input;
+		
+		return (maxOutput - minOutput) / (maxInput - minInput) * (input - minInput) + minOutput;
+	}
+	
+	fun static Interpolator linear()
+	{
+		return new Interpolator;
+	}
+}
