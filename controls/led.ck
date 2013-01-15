@@ -12,22 +12,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 
+public class OscLED extends OscControl
 /*
-	Import utilities
+	Abstract LED.
 */
-Machine.add("utility/interpolator.ck");
-
-/*
-	Import abstract controls
-*/
-Machine.add("controls/control.ck");
-Machine.add("controls/grid.ck");
-Machine.add("controls/led.ck");
-Machine.add("controls/xy.ck");
-
-/*
-	Import devices and control implementations
-*/
-Machine.add("devices/monome.ck");
+{
+	0.0 => float _brightness;
+	
+	fun float get()
+	{
+		return _brightness;
+	}
+	
+	fun void set(float brightness)
+	{
+		// Clamp to [0.0, 1.0] range
+		Math.max(0.0, Math.min(1.0, brightness)) => _brightness;
+		
+		_draw();
+	}
+	
+	fun void _draw()
+	{
+		// Implementation specific drawing routine
+	}
+}

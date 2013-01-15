@@ -124,7 +124,50 @@ class MonomeGrid extends OscGrid
 	}
 }
 
+class MonomeLED extends OscLED
+{
+	// Offsets
+	int _offset_x;
+	int _offset_y;
+
+	// Connection to monome
+	Monome @ _monome;
+	
+	fun void _draw()
+	{
+		if (!hidden)
+		{
+			_monome.set(_offset_x, _offset_y, _brightness > 0);
+		}
+	}
+	
+	/* ============== */
+	/* = Visibility = */
+	/* ============== */
+	
+	fun void show()
+	{
+		if (!hidden) return;
+		
+		0 => hidden;
+		
+		_draw();
+	}
+	
+	fun void hide()
+	{
+		if (hidden) return;
+		
+		1 => hidden;
+		
+		_monome.set(_offset_x, _offset_y, 0);
+	}
+}
+
 class MonomeTilt extends OscXY
+/*
+	An implementation of XY control on top of monome tilt sensor.
+*/
 {
 	90.0 => interpolatorX.minInput;
 	90.0 => interpolatorY.minInput;
@@ -337,6 +380,17 @@ public class Monome
 	/* ================ */
 	/* = OSC Controls = */
 	/* ================ */
+	
+	fun OscLED led(int x, int y)
+	{
+		MonomeLED led;
+		
+		x => led._offset_x;
+		y => led._offset_y;
+		this @=> led._monome;
+		
+		return led;
+	}
 	
 	fun OscGrid grid(int x, int y, int w, int h)
 	{

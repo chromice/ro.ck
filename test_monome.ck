@@ -1,8 +1,12 @@
 Monome monome;
 
-monome.init("localhost", 18974, "top");
+monome.init("localhost", 18974, "left");
 
 /* Create four virtual grids */
+monome.led(7,0) @=> OscLED led1;
+monome.led(6,0) @=> OscLED led2;
+monome.led(5,0) @=> OscLED led3;
+monome.led(4,0) @=> OscLED led4;
 monome.gridRadio(0,0,2,1) @=> OscGrid grid;
 monome.gridToggle(0,1,8,7) @=> OscGrid grid_1;
 monome.gridPush(0,1,8,7) @=> OscGrid grid_2;
@@ -47,6 +51,12 @@ fun void tiltControl(OscXY tilt)
 tilt.hide();
 grid_2.hide();
 grid.set(0,0,1);
+
+// Leds
+led1.set(0.05);
+led2.set(0.10);
+led3.set(0.0);
+led4.set(1.00);
 
 while (true)
 {
